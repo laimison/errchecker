@@ -8,11 +8,21 @@
   <fileSets>
     <fileSet>
         <directory>src/main/bin</directory>
-        <outputDirectory>/bin</outputDirectory>
+        <outputDirectory>./errchecker/bin</outputDirectory>
         <includes>
             <include>*</include>
         </includes>
-        <fileMode>0755</fileMode>
+        <fileMode>0750</fileMode>
+        <directoryMode>0755</directoryMode>
+        <lineEnding>unix</lineEnding>
+    </fileSet>
+    <fileSet>
+        <directory>src/main/docs</directory>
+        <outputDirectory>./errchecker/docs</outputDirectory>
+        <includes>
+            <include>*</include>
+        </includes>
+        <fileMode>0440</fileMode>
         <directoryMode>0755</directoryMode>
         <lineEnding>unix</lineEnding>
     </fileSet>
