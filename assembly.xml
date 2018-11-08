@@ -7,7 +7,7 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
     <fileSet>
-        <directory>src/main/bin</directory>
+        <directory>src/main/resources/scripts</directory>
         <outputDirectory>./errchecker/bin</outputDirectory>
         <includes>
             <include>*</include>
@@ -17,7 +17,7 @@
         <lineEnding>unix</lineEnding>
     </fileSet>
     <fileSet>
-        <directory>src/main/docs</directory>
+        <directory>src/main/resources/docs</directory>
         <outputDirectory>./errchecker/docs</outputDirectory>
         <includes>
             <include>*</include>
