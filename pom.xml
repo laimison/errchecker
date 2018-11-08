@@ -18,7 +18,6 @@
                   <descriptors>
                     <descriptor>assembly.xml</descriptor>
                   </descriptors>
-                  <finalName>make</finalName>
                 </configuration>
                       
                 <executions>
@@ -30,6 +29,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            
+            <plugin>
+              <artifactId>maven-jar-plugin</artifactId>
+              <version>3.0.2</version>
+              <executions>
+                <execution>
+                  <id>default-jar</id>
+                  <phase>none</phase>
+                </execution>
+              </executions>
             </plugin>
         </plugins>
     </build>
