@@ -48,7 +48,7 @@ mkdir -p $logs_dir
 
 fake_logs () {
   # Going through log files... also ensuring that 1) file type is text 2) there is pipe to while loop because we prefer to use memory instead of disk e.g. /tmp/log_file_list.txt
-  file -I ${logs_location}/* | grep -E ':[\t ]*text/plain' | awk -F ':' '{print $1}' | while read log_location
+  file --mime-type ${logs_location}/* | grep -E ':[\t ]*text/plain' | awk -F ':' '{print $1}' | while read log_location
   do
     log_name=`basename "${log_location}"`
 
