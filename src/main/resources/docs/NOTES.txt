@@ -1,1 +1,1 @@
--
+tail --follow=name --retry /tmp/tomcat-logs/* doesn't check for new files, also breaks if binary is added to this directory

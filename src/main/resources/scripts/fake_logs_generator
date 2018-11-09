@@ -2,11 +2,21 @@
 #
 # This tool simulates Tomcat by generating logs
 #
-# V1.0
+# You can run this in a loop for testing purposes:
+# while true; do ./fake_logs_generator; sleep 1; done
 #
 
 # Every Bash script should include this to exit script immediately if non-true value appeared
 set -e
+
+# Check for syntax errors before running the script
+if bash -n $0
+then
+  echo -n
+else
+  echo "Syntax error found. Exiting..."
+  exit 1
+fi
 
 logs_dir='/tmp/tomcat-logs'
 echo "Logs dir is ${logs_dir}"
@@ -31,14 +41,14 @@ else
 fi
 echo "Script dir is ${script_dir}"
 
-script_location=`dirname $script_dir`
-echo "Script location is ${script_location}"
+logs_location=`dirname ${script_dir}`/../fake_logs
+echo "Logs location is ${logs_location}"
 
 mkdir -p $logs_dir
 
 fake_logs () {
   # Going through log files... also ensuring that 1) file type is text 2) there is pipe to while loop because we prefer to use memory instead of disk e.g. /tmp/log_file_list.txt
-  file -I ${script_location}/* | grep -E ':[\t ]*text/plain' | awk -F ':' '{print $1}' | while read log_location
+  file -I ${logs_location}/* | grep -E ':[\t ]*text/plain' | awk -F ':' '{print $1}' | while read log_location
   do
     log_name=`basename "${log_location}"`
 
@@ -55,15 +65,16 @@ fake_logs () {
 		  ;;
     esac
 
-      echo "${1} ${log_name} ..."
+    echo "${1} ${log_name} ..."
+
+    sleep 2
   done
+
+  sleep 2
 }
 
 # Action starts here
 fake_logs generate
-sleep 5
 fake_logs remove
-sleep 5
 fake_logs generate
-sleep 5
 fake_logs remove

@@ -1,3 +1,25 @@
 #!/bin/bash
+#
+# This script monitors logs directory
+#
 
-echo 'Hello World'
+# multitail -w -D -e 'ERROR' --follow-all -n 100000 --mergeall -a "/tmp/asd" -Iw "/tmp/tomcat-logs/*" 1
+# /usr/bin/flock -n /tmp/app.lockfile ./errchecker
+
+# Check for syntax errors before running the script
+if bash -n $0
+then
+  echo -n
+else
+  echo "Syntax error found. Exiting..."
+  exit 1
+fi
+
+# multitail is mandatory
+if which multitail >/dev/null 2>&1
+then
+  echo "INFO: multitail is found installed"
+else
+  echo "ERROR: multitail is not installed"
+  exit 1
+fi
