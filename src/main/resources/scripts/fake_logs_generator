@@ -67,14 +67,12 @@ fake_logs () {
 
     echo "${1} ${log_name} ..."
 
-    sleep 2
+    sleep 5
   done
 
-  sleep 2
+  sleep 5
 }
 
 # Action starts here
-fake_logs generate
-fake_logs remove
 fake_logs generate
 fake_logs remove
