@@ -57,7 +57,7 @@ else
   exit 1
 fi
 
-# only accept multitail 6 (fail loud - different major version can work differently and fail without testing)
+# only accept multitail 6 (fail loud - because different major version could work differently)
 if multitail -V | grep multitail | grep -E " [0-9]+\.[0-9]+" | tr " " "\n" | grep -E "^[0-9]+\.[0-9]+" | awk -F '.' '{print $1}' | grep -q ^6$
 then
   echo "INFO: multitail version 6 found"
@@ -76,6 +76,12 @@ else
   exit 1
 fi
 
+echo_var() {
+  echo $1
+  echo $1 >> /tmp/laimis
+  return 0
+}
+
 # start monitoring
 # 
 # -w					do not use colors
@@ -90,8 +96,11 @@ fi
 # monitoring & filtering
 screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersion:.*Apache.*Tomcat|INFO.* Server startup in )" --follow-all -n 0 --mergeall -a "${events_file_temporary}" -Iw "${logs_dir}/*" 1
 
-# additional filtering and manipulation phase
-tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file}
+# additional filtering and manipulations including exceptions counter
+# xargs -P stands for --max-procs, max processes that are executed, in this scenario we must choose 1 to ensure lines are calculated correctly because of order
+# xargs -n stands for --max-args, max arguments that can be passed, in this scenario we need 1
+# xargs -I stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
+tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file} | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 1 -I {} bash -c 'echo_var "$@"' _ {}
 
 # Keep this script running if it goes to here at after any corrections so trapping makes sense
 cat

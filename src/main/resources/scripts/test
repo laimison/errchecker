@@ -107,7 +107,7 @@ export -f echo_var
 
 sleep 1 && echo 'not needed' >> /tmp/123 && echo TOMCAT IS STARTING >> /tmp/123 && echo asd2 >> /tmp/123 && echo TOMCAT IS STARTED >> /tmp/123 && echo not needed >> /tmp/123 &
 
-# xargs -P stands for --max-procs, max processes that are executed, in this scenario we must choose 1
+# xargs -P stands for --max-procs, max processes that are executed, in this scenario we must choose 1 to ensure lines are calculated correctly because of order
 # xargs -n stands for --max-args, max arguments that can be passed, in this scenario we need 1
 # xargs -I stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
 tail -f /tmp/123 | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 1 -I {} bash -c 'echo_var "$@"' _ {}
