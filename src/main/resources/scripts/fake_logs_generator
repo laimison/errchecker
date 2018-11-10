@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# Alpha version
+#
 # This tool simulates Tomcat by generating logs
 #
 # You can run this in a loop for testing purposes:
@@ -14,12 +16,12 @@ if bash -n $0
 then
   echo -n
 else
-  echo "Syntax error found. Exiting..."
+  echo "ERROR: Syntax error found. Exiting..."
   exit 1
 fi
 
 logs_dir='/tmp/tomcat-logs'
-echo "Logs dir is ${logs_dir}"
+echo "INFO: Logs dir is ${logs_dir}"
 
 # The trap statement tells the script to run received_signal() on signals 1, 2, 3 or 6. The most common one (CTRL-C) is signal 2 (SIGINT).
 trap received_signal 1 2 3 6
@@ -39,10 +41,10 @@ then
 else
   script_dir=`readlink -f $0`
 fi
-echo "Script dir is ${script_dir}"
+echo "INFO: Script dir is ${script_dir}"
 
 logs_location=`dirname ${script_dir}`/../fake_logs
-echo "Logs location is ${logs_location}"
+echo "INFO: Logs location is ${logs_location}"
 
 mkdir -p $logs_dir
 
@@ -54,23 +56,23 @@ fake_logs () {
 
     case $1 in
 	  generate)
-      cat "$log_location" >> "${logs_dir}/fake_${log_name}"
+                  touch "${logs_dir}/fake_${log_name}"
+                  sleep 1
+                  cat "$log_location" >> "${logs_dir}/fake_${log_name}"
 		  ;;
 	  remove)
 		  /bin/rm -f "${logs_dir}/fake_${log_name}"
 		  ;;
 	  *)
-		  echo "Error in function ${FUNCNAME[0]}: Sorry, I don't understand"
+		  echo "ERROR: Error in function ${FUNCNAME[0]}: Sorry, I don't understand"
       exit 1
 		  ;;
     esac
 
     echo "${1} ${log_name} ..."
 
-    sleep 5
+    sleep 4
   done
-
-  sleep 5
 }
 
 # Action starts here

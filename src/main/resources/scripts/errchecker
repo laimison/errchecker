@@ -1,10 +1,16 @@
 #!/bin/bash
 #
+# Alpha version
+# 
 # This script monitors logs directory
 #
+# It can be called with command below to make sure no duplicate processes are running
+# 
+# /usr/bin/flock -n /tmp/errchecker.lockfile ./errchecker
+#
 
-# multitail -w -D -e 'ERROR' --follow-all -n 100000 --mergeall -a "/tmp/asd" -Iw "/tmp/tomcat-logs/*" 1
-# /usr/bin/flock -n /tmp/app.lockfile ./errchecker
+# Every Bash script should include this to exit script immediately if non-true value appeared
+set -e
 
 # Check for syntax errors before running the script
 if bash -n $0
@@ -15,11 +21,77 @@ else
   exit 1
 fi
 
+# Variables
+events_file_temporary='/tmp/errchecker-log.temporary'
+events_file='/tmp/errchecker-log.txt'
+logs_dir='/tmp/tomcat-logs'
+echo "INFO: Logs dir is ${logs_dir}"
+
+# The trap statement tells the script to run received_signal() on signals 1, 2, 3 or 6. The most common one (CTRL-C) is signal 2 (SIGINT).
+trap received_signal 1 2 3 6
+
+received_signal()
+{
+  echo "Caught Signal ... Doing clean up."
+  screen -XS errchecker quit
+  echo "Exiting."
+  exit 1
+}
+
+# allow only Linux, e.g. on Mac OS multitail command may not work
+if uname -s | grep -q ^Linux
+then
+  echo -n
+else
+  echo "ERROR: only Linux is supported"
+  exit 1
+fi
+
 # multitail is mandatory
 if which multitail >/dev/null 2>&1
 then
-  echo "INFO: multitail is found installed"
+  echo "INFO: multitail is already installed"
 else
+  # here can be some logic to install multitail, but for this version it just exit
   echo "ERROR: multitail is not installed"
   exit 1
 fi
+
+# only accept multitail 6 (fail loud - different major version can work differently and fail without testing)
+if multitail -V | grep multitail | grep -E " [0-9]+\.[0-9]+" | tr " " "\n" | grep -E "^[0-9]+\.[0-9]+" | awk -F '.' '{print $1}' | grep -q ^6$
+then
+  echo "INFO: multitail version 6 found"
+else
+  echo "ERROR: only multitail 6 is allowed"
+  exit 1
+fi
+
+# screen is mandatory
+if which screen >/dev/null 2>&1
+then
+  echo "INFO: screen is already installed"
+else
+  # here can be some logic to install screen, but for this version it just exit
+  echo "ERROR: screen is not installed"
+  exit 1
+fi
+
+# start monitoring
+# 
+# -w					do not use colors
+# -D					do not display a status line at all
+# -e					use the next regular expression on the following file
+# --follow-all				following filename
+# -n 0					do not check backwards, e.g. if log is copied to the directory, it will ignore old lines and wait for new ones
+# --mergeall				merge all files to one, for one window
+# -a					write output to the file after lines were filtered
+# -lw "file" interval_in_seconds	file(s) output is merged, every interval it will check if any new files were created (or modified) and start tailing
+#
+# monitoring & filtering
+screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersion:.*Apache.*Tomcat|INFO.* Server startup in )" --follow-all -n 0 --mergeall -a "${events_file_temporary}" -Iw "${logs_dir}/*" 1
+
+# additional filtering and manipulation phase
+tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file}
+
+# Keep this script running if it goes to here at after any corrections so trapping makes sense
+cat
