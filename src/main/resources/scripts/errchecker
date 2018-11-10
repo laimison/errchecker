@@ -76,11 +76,14 @@ else
   exit 1
 fi
 
-echo_var() {
+# Standard input manipulator
+stdin_manipulator() {
   echo $1
   echo $1 >> /tmp/laimis
   return 0
 }
+
+export -f stdin_manipulator
 
 # start monitoring
 # 
@@ -100,7 +103,7 @@ screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersi
 # xargs -P stands for --max-procs, max processes that are executed, in this scenario we must choose 1 to ensure lines are calculated correctly because of order
 # xargs -n stands for --max-args, max arguments that can be passed, in this scenario we need 1
 # xargs -I stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
-tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file} | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 1 -I {} bash -c 'echo_var "$@"' _ {}
+tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file} | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 1 -I {} bash -c 'stdin_manipulator "$@"' _ {}
 
 # Keep this script running if it goes to here at after any corrections so trapping makes sense
 cat

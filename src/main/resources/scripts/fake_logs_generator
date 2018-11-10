@@ -69,7 +69,7 @@ fake_logs () {
 		  ;;
     esac
 
-    echo "${1} ${log_name} ..."
+    echo "INFO: ${1} ${log_name} ..."
 
     sleep 4
   done
