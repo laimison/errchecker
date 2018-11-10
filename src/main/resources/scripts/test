@@ -1,0 +1,86 @@
+#!/bin/bash
+
+echo "TOMCAT IS STARTING
+error
+exception
+TOMCAT STARTED
+TOMCAT IS STARTING
+asd
+TOMCAT IS STARTED
+asd
+asd
+TOMCAT IS STARTING
+asd
+TOMCAT IS STARTED
+TOMCAT IS STARTING
+asd
+TOMCAT IS STARTED
+asd
+asd
+asd
+asd
+TOMCAT IS STARTING
+asd
+TOMCAT IS STARTED
+asd
+asd
+asd" > /tmp/123
+
+echo_var(){
+  # These are manipulations called via xargs to write exception counts
+  #if echo $1 | grep -q 'TOMCAT IS STARTING'
+  #then
+    echo $1 asd >> /tmp/1
+  #fi
+
+  #if echo $1 | grep -q 'TOMCAT IS STARTED'
+  #then
+    echo "EXCEPTIONS FOUND DURING THE STARTUP: `wc -l /tmp/1`" > /tmp/2
+    > /tmp/1
+  #fi
+
+  #if echo $1 | grep -vq 'TOMCAT IS STARTING' | grep -vq 'TOMCAT IS STARTED'
+  #then
+    echo $1 asd >> /tmp/1
+  #else
+    #> /dev/null
+    #if true
+    #then
+      # > /dev/null
+      echo $1 a >> /tmp/1
+    #fi
+  #fi
+
+
+
+
+#    case $1 in
+#          generate)
+#                  echo -n
+#                  ;;
+#          remove)
+#                  echo -n 
+#                  ;;
+#          *)
+#                  echo -n
+#                  ;;
+#    esac
+
+
+
+
+
+  # Normal output
+  echo $1 b
+  return 0
+}
+
+export -f echo_var
+
+# printf "1\n2\n3" | xargs -n 1 -P 10 -I {} bash -c 'echo_var "$@"' _ {}
+
+# tail -f /tmp/123 | sed -u -n '/STARTING/,/STARTED/p' | xargs -I@ echo ok
+
+sleep 1 && echo 'not needed' >> /tmp/123 && echo TOMCAT IS STARTING >> /tmp/123 && echo asd2 >> /tmp/123 && echo TOMCAT IS STARTED >> /tmp/123 && echo not needed >> /tmp/123 &
+
+tail -f /tmp/123 | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 10 -I {} bash -c 'echo_var "$@"' _ {}
