@@ -2,7 +2,9 @@
 #
 # Alpha version
 # 
-# This script monitors logs directory
+# This script monitors Tomcat logs directory
+#
+# ! I depend on multitail 6 !
 #
 # It can be called with command below to make sure no duplicate processes are running
 # 
@@ -23,7 +25,7 @@ fi
 
 # Variables
 events_file_temporary='/tmp/errchecker-log.temporary'
-events_file='/tmp/errchecker-log.txt'
+export events_file='/tmp/errchecker-log.txt'
 logs_dir='/tmp/tomcat-logs'
 echo "INFO: Logs dir is ${logs_dir}"
 
@@ -57,7 +59,7 @@ else
   exit 1
 fi
 
-# only accept multitail 6 (fail loud - because different major version could work differently)
+# only accept multitail 6 (fail loud - because different major version can work differently)
 if multitail -V | grep multitail | grep -E " [0-9]+\.[0-9]+" | tr " " "\n" | grep -E "^[0-9]+\.[0-9]+" | awk -F '.' '{print $1}' | grep -q ^6$
 then
   echo "INFO: multitail version 6 found"
@@ -76,10 +78,49 @@ else
   exit 1
 fi
 
+> /tmp/temp
+> /tmp/temp2
+> /tmp/results
 # Standard input manipulator
 stdin_manipulator() {
+  if [ "$1" == "TOMCAT IS STARTING" ]
+  then
+    > /tmp/temp
+  else
+    if [ "$1" == "TOMCAT IS STARTED" ]
+    then
+      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" > /tmp/results
+      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" >> /tmp/results2
+      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" >> ${events_file}
+      > /tmp/temp
+    else
+      echo $1 >> /tmp/temp
+      # wc -l /tmp/1 > /tmp/2
+      # awk 'END{print NR}' /tmp/1 > /tmp/2
+      # sed -u -n \$= /tmp/1 > /tmp/2
+      # grep --line-buffered [a-zA-Z] /tmp/1 > /tmp/2
+      # grep [a-zA-Z] /tmp/1 > /tmp/2
+      # cat /tmp/1 | awk 'END{print NR}' 2>/dev/null > /dev/null
+      # tmp2=`cat /tmp/1`
+      # tmp2=1
+      # tmp2=`cat /tmp/1`
+      # value=`echo $(($tmp2 + 1))`
+    fi
+  fi
+
+#    case $1 in
+#          generate)
+#                  echo -n
+#                  ;;
+#          remove)
+#                  echo -n 
+#                  ;;
+#          *)
+#                  echo -n
+#                  ;;
+#    esac
+
   echo $1
-  echo $1 >> /tmp/laimis
   return 0
 }
 

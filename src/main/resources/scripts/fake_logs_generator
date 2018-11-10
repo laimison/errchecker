@@ -58,7 +58,8 @@ fake_logs () {
 	  generate)
                   touch "${logs_dir}/fake_${log_name}"
                   sleep 1
-                  cat "$log_location" >> "${logs_dir}/fake_${log_name}"
+                  # Print one line every 20 miliseconds
+                  cat "$log_location" | awk '{system("sleep .020");print}' >> "${logs_dir}/fake_${log_name}"
 		  ;;
 	  remove)
 		  /bin/rm -f "${logs_dir}/fake_${log_name}"
