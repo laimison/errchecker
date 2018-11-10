@@ -25,7 +25,14 @@ fi
 
 # Variables
 events_file_temporary='/tmp/errchecker-log.temporary'
+echo "INFO: Temporary monitoring file for events is ${events_file_temporary}"
+
+export counter_file='/tmp/errchecker-log.counter'
+echo "INFO: Temporary exceptions counter file is ${counter_file}"
+
 export events_file='/tmp/errchecker-log.txt'
+echo "INFO: Main monitoring file for events is ${events_file}"
+
 logs_dir='/tmp/tomcat-logs'
 echo "INFO: Logs dir is ${logs_dir}"
 
@@ -35,7 +42,12 @@ trap received_signal 1 2 3 6
 received_signal()
 {
   echo "Caught Signal ... Doing clean up."
+
+  # Quit multitail monitoring
   screen -XS errchecker quit
+
+  # Reset counter
+  > /tmp/temp
   echo "Exiting."
   exit 1
 }
@@ -83,6 +95,7 @@ fi
 > /tmp/results
 # Standard input manipulator
 stdin_manipulator() {
+
   if [ "$1" == "TOMCAT IS STARTING" ]
   then
     > /tmp/temp
@@ -108,18 +121,23 @@ stdin_manipulator() {
     fi
   fi
 
-#    case $1 in
-#          generate)
-#                  echo -n
-#                  ;;
-#          remove)
-#                  echo -n 
-#                  ;;
-#          *)
-#                  echo -n
-#                  ;;
-#    esac
+#  case $1 in
+#    "TOMCAT IS STARTING")
+#      # Reset counter
+#      > /tmp/temp
+#      ;;
+#    "TOMCAT IS STARTED")
+#      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" >> ${events_file}
 
+#      # Reset counter
+#      > /tmp/temp
+#      ;;
+#    *)
+#      echo $1 >> /tmp/temp
+#      ;;
+#  esac
+
+  # Pass stdin to stdout, exactly as received, for the next commands
   echo $1
   return 0
 }
