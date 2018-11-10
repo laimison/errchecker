@@ -90,54 +90,23 @@ else
   exit 1
 fi
 
-> /tmp/temp
-> /tmp/temp2
-> /tmp/results
 # Standard input manipulator
 stdin_manipulator() {
+  # Manipulate with lines received as standard input and count them
+  case $1 in
+    "TOMCAT IS STARTING")
+      # Reset counter
+      > ${counter_file}
+      ;;
+    "TOMCAT IS STARTED")
+      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l ${counter_file} | awk -F ' ' '{print $1}'`" >> ${events_file}
+      ;;
+    *)
+      echo $1 >> ${counter_file}
+      ;;
+  esac
 
-  if [ "$1" == "TOMCAT IS STARTING" ]
-  then
-    > /tmp/temp
-  else
-    if [ "$1" == "TOMCAT IS STARTED" ]
-    then
-      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" > /tmp/results
-      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" >> /tmp/results2
-      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" >> ${events_file}
-      > /tmp/temp
-    else
-      echo $1 >> /tmp/temp
-      # wc -l /tmp/1 > /tmp/2
-      # awk 'END{print NR}' /tmp/1 > /tmp/2
-      # sed -u -n \$= /tmp/1 > /tmp/2
-      # grep --line-buffered [a-zA-Z] /tmp/1 > /tmp/2
-      # grep [a-zA-Z] /tmp/1 > /tmp/2
-      # cat /tmp/1 | awk 'END{print NR}' 2>/dev/null > /dev/null
-      # tmp2=`cat /tmp/1`
-      # tmp2=1
-      # tmp2=`cat /tmp/1`
-      # value=`echo $(($tmp2 + 1))`
-    fi
-  fi
-
-#  case $1 in
-#    "TOMCAT IS STARTING")
-#      # Reset counter
-#      > /tmp/temp
-#      ;;
-#    "TOMCAT IS STARTED")
-#      echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l /tmp/temp | awk -F ' ' '{print $1}'`" >> ${events_file}
-
-#      # Reset counter
-#      > /tmp/temp
-#      ;;
-#    *)
-#      echo $1 >> /tmp/temp
-#      ;;
-#  esac
-
-  # Pass stdin to stdout, exactly as received, for the next commands
+  # In terms of returning, function does no corrections, only prints exactly the same lines as received (stdin == stdout)
   echo $1
   return 0
 }
@@ -164,5 +133,5 @@ screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersi
 # xargs -I stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
 tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file} | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 1 -I {} bash -c 'stdin_manipulator "$@"' _ {}
 
-# Keep this script running if it goes to here at after any corrections so trapping makes sense
+# Keep this script running if it goes to here at any code corrections so trapping makes sense
 cat
