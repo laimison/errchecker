@@ -44,8 +44,8 @@ received_signal()
   echo "Caught Signal ... Doing clean up."
 
   # Quit multitail monitoring
-  screen -XS errchecker-multitail quit
-  screen -XS errchecker-tail quit
+  screen -ls errchecker-multitail | grep -E '\s+[0-9]+\.' | awk -F ' ' '{print $1}' | while read s; do screen -XS $s quit; done
+  screen -ls errchecker-tail | grep -E '\s+[0-9]+\.' | awk -F ' ' '{print $1}' | while read s; do screen -XS $s quit; done
 
   # Reset counter
   > /tmp/temp
