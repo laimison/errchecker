@@ -105,8 +105,12 @@ stdin_manipulator() {
       > ${counter_file}
       ;;
     *)
-      # Everything else goes here including errors and exceptions OR as defined in multitail regular expression
-      echo $1 >> ${counter_file}
+      # Everything else goes here as defined in multitail regular expression
+      # We want to monitor exceptions only, excluding errors (if there is a need for errors, just change grep to grep -q -e 'Exception:' -e 'ERROR') and that's it
+      if echo $1 | grep -q 'Exception:'
+      then
+        echo $1 >> ${counter_file}
+      fi
       ;;
   esac
 
@@ -132,10 +136,13 @@ export -f stdin_manipulator
 screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersion:.*Apache.*Tomcat|INFO.* Server startup in )" --follow-all -n 0 --mergeall -a "${events_file_temporary}" -Iw "${logs_dir}/*" 1
 
 # additional filtering and manipulations including exceptions counter
-# xargs -P stands for --max-procs, max processes that are executed, in this scenario we must choose 1 to ensure lines are calculated correctly because of order
-# xargs -n stands for --max-args, max arguments that can be passed, in this scenario we need 1
-# xargs -I stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
-tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | tee -a ${events_file} | sed -u -n '/STARTING/,/STARTED/p' | xargs -n 1 -P 1 -I {} bash -c 'stdin_manipulator "$@"' _ {}
+#
+# xargs -P	stands for --max-procs, max processes that are executed, in this scenario we must choose 1 to ensure lines are calculated correctly because of order
+# xargs -n	stands for --max-args, max arguments that can be passed, in this scenario we need 1
+# xargs -I	stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
+# tail -n 0	it should be fresh, without checking previous messages
+#
+tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | xargs -n 1 -P 1 -I {} bash -c 'stdin_manipulator "$@"' _ {} | tee -a ${events_file}
 
 # Keep this script running if it goes to here at any code corrections so trapping makes sense
 cat
