@@ -48,7 +48,7 @@ received_signal()
   screen -ls errchecker-tail | grep -E '\s+[0-9]+\.' | awk -F ' ' '{print $1}' | while read s; do screen -XS $s quit; done
 
   # Reset counter
-  > /tmp/temp
+  > ${counter_file}
   echo "Exiting."
   exit 1
 }

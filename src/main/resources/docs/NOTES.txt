@@ -1,4 +1,40 @@
-tail --follow=name --retry /tmp/tomcat-logs/* doesn't check for new files, also breaks if binary is added to this directory
+# Decisions
 
-- Mention that this monitors only Exceptions and excludes errors
-- maven-jar-plugin needed to not create jar
+By doing some pre-analysis I found that standard 'tail' tool is not capable to solve this problem if we choose Bash (because of newly created logs) or likely it needs to be used in some hacky ways.
+I didn't check Python solutions, because of two reasons: I'm more comfortable with Shell scripting and also this was actually solved in around 30 lines of code! So it's quite unlikely can be solved in a simpler way.
+
+There is 'tail' improvement called 'multitail'. This package is available by default in Redhat, Centos and Ubuntu repositories.
+So firstly, the decision became stronger that tool is well supported.
+On top of that, this tool does almost everything what needed is for this task.
+To have better understanding, I have played with this tool on Centos and Ubuntu to see if I can approve this tool regardless of high usage and support in the community.
+Antother great thing is simplicity using multitail with Bash programming.
+30 lines of code (multitail + counting function) do the main thing, everything else is just checking whether environment is suitable, generating logs if Tomcat is not installed and testing tools.
+So this tool could be well re-used and new people can understand this in minutes.
+
+errchecker shell script requires Multitail 6.4 which comes by default on latest Centos and Ubuntu. This ignores last digit for bug fixes. It fails loud if another version is found by default.
+This prevents some issues in the future if binary is modified. To be more specific, it could be some bugs or options changed for binary.
+These issues happens in the companies by not taking care of the version checking. Quite often.
+In worst case scenario, it will work differently, but don't fail loud and can affect multiple applications by not being monitored at all.
+
+# Smart Improvements
+
+Multitool is a great tool to simply solve this problem, but it cannot do some logic e.g. counting, also it is more designed to be used manually by watching screen.
+So the solution was to transfer required lines from Multitool to a temporary file. By continuously tailing this file, I can apply any Bash scripting. Usually, when data is not easily managed, it is much easier to do programming in phases.
+
+When events are continiously streaming (tailing), there is no obvious way to do some logic and detect exceptions during Tomcat startup. It needs some information from previous lines to make a decision.
+I have solved this by creating stdin_manipulator function. This function can be called through pipe and do some statements to detect Tomcat startup phase, also count the lines with "Exception:" word.
+So this issue is completely solved in this streaming scenario by simply applying any normal Bash scripting in a function.
+
+# My Questions
+
+Do we need to count Exception: phrases or both Exception: and ERROR?
+It's developed to count only "Exception:", but if you need "ERROR" phrase, please uncomment line 114 and that's it
+
+# Some comments
+
+By default Maven creates jar file so I have added 'none' phase for maven-jar-plugin
+
+# Improvements and potencial usage
+
+If this tool would be approved to use, it's better to start a thread of multitail per Tomcat instance
+So this is to make sure operations are not clashed during the startup moments. They can have different locations such as "/tmp/tomcat-logs/app1", "/tmp/tomcat-logs/app2", etc. passed to the script.
