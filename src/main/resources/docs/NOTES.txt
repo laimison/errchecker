@@ -30,6 +30,9 @@ So this issue is completely solved in this streaming scenario by simply applying
 Do we need to count Exception: phrases or both Exception: and ERROR?
 It's developed to count only "Exception:", but if you need "ERROR" phrase, please uncomment line 114 and that's it
 
+Where do we need to write exception counts?
+I have chosen to write to /tmp/errchecker-log.txt
+
 # Some comments
 
 By default Maven creates jar file so I have added 'none' phase for maven-jar-plugin
