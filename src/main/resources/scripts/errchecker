@@ -124,6 +124,10 @@ stdin_manipulator() {
 
 export -f stdin_manipulator
 
+# If for some unexpected reason screen sessions are running, quit them
+screen -ls errchecker-multitail | grep -E '\s+[0-9]+\.' | awk -F ' ' '{print $1}' | while read s; do screen -XS $s quit; done
+screen -ls errchecker-tail | grep -E '\s+[0-9]+\.' | awk -F ' ' '{print $1}' | while read s; do screen -XS $s quit; done
+
 # start monitoring
 # 
 # -w					do not use colors
