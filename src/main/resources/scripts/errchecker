@@ -111,6 +111,7 @@ stdin_manipulator() {
     *)
       # Everything else goes here as defined in multitail regular expression
       # We want to monitor exceptions only, excluding errors (if there is a need for errors, just change grep to grep -q -e 'Exception:' -e 'ERROR') and that's it
+      # Tested example: if echo $1 | grep -q -e 'Exception:' -e 'ERROR'
       if echo $1 | grep -q 'Exception:'
       then
         echo $1 >> ${counter_file}
