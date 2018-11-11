@@ -44,7 +44,8 @@ received_signal()
   echo "Caught Signal ... Doing clean up."
 
   # Quit multitail monitoring
-  screen -XS errchecker quit
+  screen -XS errchecker-multitail quit
+  screen -XS errchecker-tail quit
 
   # Reset counter
   > /tmp/temp
@@ -74,7 +75,7 @@ fi
 # only accept multitail 6 (fail loud - because different major and minor version can work differently)
 if multitail -V | grep multitail | grep -E " [0-9]+\.[0-9]+" | tr " " "\n" | grep -E "^[0-9]+\.[0-9]+" | awk -F '.' '{print $1"."$2}' | grep -q ^6.4$
 then
-  echo "INFO: multitail version 6 found"
+  echo "INFO: multitail version 6.4 found"
 else
   echo "ERROR: only multitail 6 is allowed"
   exit 1
@@ -133,7 +134,7 @@ export -f stdin_manipulator
 # -lw "file" interval_in_seconds	file(s) output is merged, every interval it will check if any new files were created (or modified) and start tailing
 #
 # monitoring & filtering
-screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersion:.*Apache.*Tomcat|INFO.* Server startup in )" --follow-all -n 0 --mergeall -a "${events_file_temporary}" -Iw "${logs_dir}/*" 1
+screen -dmSL errchecker-multitail multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersion:.*Apache.*Tomcat|INFO.* Server startup in )" --follow-all -n 0 --mergeall -a "${events_file_temporary}" -Iw "${logs_dir}/*" 1
 
 # additional filtering and manipulations including exceptions counter
 #
@@ -142,7 +143,12 @@ screen -dmSL errchecker multitail -w -D -e "(ERROR|Exception:|[Ss]erver [Vv]ersi
 # xargs -I	stands for replace-str, it takes line from standard input and can be reused for manipulations in a function
 # tail -n 0	it should be fresh, without checking previous messages
 #
-tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e "s/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g" | sed -u -e "s/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g" | xargs -n 1 -P 1 -I {} bash -c 'stdin_manipulator "$@"' _ {} | tee -a ${events_file}
+screen -dmSL errchecker-tail bash -c "tail --follow=name --retry -n 0 ${events_file_temporary} | sed -u -e 's/.*INFO.* Server startup in .*/TOMCAT IS STARTED/g' | sed -u -e 's/.*[Ss]erver [Vv]ersion:.*Apache.*Tomcat.*/TOMCAT IS STARTING/g' | xargs -n 1 -P 1 -I {} bash -c 'stdin_manipulator \"\$@\"' _ {} | tee -a ${events_file}"
+
+# In some editors, there is a syntax issue form this line, but it's ok
+
+printf "\nINFO: See what is written to monitoring file ${events_file}:\n"
+tail -f -n 0 "${events_file}"
 
 # Keep this script running if it goes to here at any code corrections so trapping makes sense
 cat
