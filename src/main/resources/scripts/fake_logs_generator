@@ -2,7 +2,7 @@
 #
 # Alpha version
 #
-# This tool simulates Tomcat by generating logs
+# This tool simulates Tomcat by generating logs - if you have Tomcat logs, you don't need this script
 #
 # You can run this in a loop for testing purposes:
 # while true; do ./fake_logs_generator; sleep 1; done

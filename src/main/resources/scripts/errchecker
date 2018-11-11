@@ -6,7 +6,7 @@
 #
 # ! I depend on multitail 6.4 !
 #
-# It can be called with command below to make sure no duplicate processes are running
+# It can be called with command below (as any script) to make sure no duplicate processes are running
 # 
 # /usr/bin/flock -n /tmp/errchecker.lockfile ./errchecker
 #
@@ -93,6 +93,9 @@ fi
 
 # Standard input manipulator
 stdin_manipulator() {
+  # In terms of returning, function does no corrections, only prints exactly the same lines as received (stdin == stdout)
+  echo $1
+
   # Manipulate with lines received as standard input and count them
   case $1 in
     "TOMCAT IS STARTING")
@@ -115,8 +118,6 @@ stdin_manipulator() {
       ;;
   esac
 
-  # In terms of returning, function does no corrections, only prints exactly the same lines as received (stdin == stdout)
-  echo $1
   return 0
 }
 
