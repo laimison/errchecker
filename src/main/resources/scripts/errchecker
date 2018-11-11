@@ -4,7 +4,7 @@
 # 
 # This script monitors Tomcat logs directory
 #
-# ! I depend on multitail 6 !
+# ! I depend on multitail 6.4 !
 #
 # It can be called with command below to make sure no duplicate processes are running
 # 
@@ -71,8 +71,8 @@ else
   exit 1
 fi
 
-# only accept multitail 6 (fail loud - because different major version can work differently)
-if multitail -V | grep multitail | grep -E " [0-9]+\.[0-9]+" | tr " " "\n" | grep -E "^[0-9]+\.[0-9]+" | awk -F '.' '{print $1}' | grep -q ^6$
+# only accept multitail 6 (fail loud - because different major and minor version can work differently)
+if multitail -V | grep multitail | grep -E " [0-9]+\.[0-9]+" | tr " " "\n" | grep -E "^[0-9]+\.[0-9]+" | awk -F '.' '{print $1"."$2}' | grep -q ^6.4$
 then
   echo "INFO: multitail version 6 found"
 else
@@ -100,8 +100,12 @@ stdin_manipulator() {
       ;;
     "TOMCAT IS STARTED")
       echo "EXCEPTIONS FOUND DURING TOMCAT STARTUP: `wc -l ${counter_file} | awk -F ' ' '{print $1}'`" >> ${events_file}
+
+      # Reset counter - nearly zero possibility, unless some incomplete log file given, but still no problem to just reset
+      > ${counter_file}
       ;;
     *)
+      # Everything else goes here including errors and exceptions OR as defined in multitail regular expression
       echo $1 >> ${counter_file}
       ;;
   esac
