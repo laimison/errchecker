@@ -150,7 +150,7 @@ screen -dmSL errchecker-tail bash -c "tail --follow=name --retry -n 0 ${events_f
 # In some editors, there is a syntax issue form this line, but it's ok
 
 printf "\nINFO: See what is written to monitoring file ${events_file}:\n"
-tail --follow-name --retry -n 0 "${events_file}"
+tail --follow=name --retry -n 0 "${events_file}"
 
 # Keep this script running if it goes to here at any code corrections so trapping makes sense
 cat
